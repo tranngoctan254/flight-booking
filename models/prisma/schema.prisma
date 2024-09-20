@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Define the Users table
+model User {
+  user_id   Int       @id @default(autoincrement())
+  avatarUrl String?   @db.Text
+  username  String    @db.VarChar(255)
+  email     String    @db.VarChar(255)
+  password  String    @db.Text
+  role      Role      @default(user)
+  Bookings  Booking[]
+}
+
+// Enum for user roles
+enum Role {
+  seller
+  user
+  admin
+}
+
+// Define the Aircrafts table
+model Aircraft {
+  aircraft_id          Int      @id @default(autoincrement())
+  aircraft_number      String   @db.VarChar(255)
+  aircraft_name        String   @db.VarChar(255)
+  num_commercial_seats Int
+  num_vip_seats        Int
+  Flights              Flight[]
+}
+
+// Define the Routes table
+model Route {
+  route_id     Int      @id @default(autoincrement())
+  from_airport String   @db.VarChar(255)
+  to_airport   String   @db.VarChar(255)
+  distance     Float
+  duration     String
+  price        Float
+  Flights      Flight[]
+}
+
+// Define the Flights table
+model Flight {
+  flight_id    Int        @id @default(autoincrement())
+  route_id     Int
+  aircraft_id  Int
+  flight_date  DateTime   @db.Date
+  flight_time  DateTime   @db.Time
+  ticket_type  TicketType
+  promotion_id Int?
+  Route        Route      @relation(fields: [route_id], references: [route_id])
+  Aircraft     Aircraft   @relation(fields: [aircraft_id], references: [aircraft_id])
+  Promotion    Promotion? @relation(fields: [promotion_id], references: [promotion_id])
+  Bookings     Booking[]
+}
+
+// Enum for ticket types
+enum TicketType {
+  adult
+  child
+}
+
+// Define the Tickets table
+model Ticket {
+  ticket_id      Int     @id @default(autoincrement())
+  booking_id     Int
+  passenger_name String  @db.VarChar(255)
+  seat_number    String  @db.VarChar(255)
+  ticket_price   Float
+  Booking        Booking @relation(fields: [booking_id], references: [booking_id])
+}
+
+// Define the Bookings table
+model Booking {
+  booking_id     Int           @id @default(autoincrement())
+  user_id        Int
+  flight_id      Int
+  booking_date   DateTime      @default(now())
+  total_price    Float
+  payment_status PaymentStatus
+  booking_code   String        @db.VarChar(255)
+  User           User          @relation(fields: [user_id], references: [user_id])
+  Flight         Flight        @relation(fields: [flight_id], references: [flight_id])
+  Payments       Payment[]
+  Tickets        Ticket[]
+}
+
+// Enum for payment status
+enum PaymentStatus {
+  pending
+  paid
+}
+
+// Define the Promotions table
+model Promotion {
+  promotion_id    Int      @id @default(autoincrement())
+  promotion_name  String   @db.VarChar(255)
+  description     String?  @db.Text
+  promotion_value Float
+  Flights         Flight[]
+}
+
+// Define the Payments table
+model Payment {
+  payment_id     Int           @id @default(autoincrement())
+  booking_id     Int
+  payment_method PaymentMethod
+  amount         Float
+  payment_date   DateTime      @default(now())
+  Booking        Booking       @relation(fields: [booking_id], references: [booking_id])
+}
+
+// Enum for payment methods
+enum PaymentMethod {
+  credit_card
+  atm_card
+}
