@@ -1,6 +1,6 @@
 import models from "@models/prisma";
 import { Request, Response } from "express";
-import { ApplicationController } from ".";
+import { ApplicationController } from "./application.controller";
 
 export class AircraftController extends ApplicationController {
   public async index(req: Request, res: Response) {

@@ -1,0 +1,20 @@
+extends ../layout
+
+block content
+  h1 Book Ticket
+  form(action='/tickets/book', method='POST')
+    label(for='booking_id') Booking ID
+    select(name='booking_id', required)
+      each booking in bookings
+        option(value=booking.booking_id)= booking.booking_id
+    label(for='passenger_name') Passenger Name
+    input(type='text', name='passenger_name', required)
+    
+    label(for='seat_number') Seat Number
+    input(type='text', name='seat_number', required)
+
+    label(for='ticket_price') Ticket Price
+    input(type='number', name='ticket_price', required)
+
+    button(type='submit') Book Ticket
+  a(href='/tickets') Back to Tickets

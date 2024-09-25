@@ -1,0 +1,25 @@
+extends ../layout
+
+block content
+  h1 Search Ticket
+  form(action='/tickets/search', method='GET')
+    label(for='id') Ticket ID
+    input(type='text', name='id', required)
+    button(type='submit') Search
+
+  if ticket
+    h2 Ticket Details
+    p
+      strong ID:
+      | #{ticket.ticket_id}
+    p
+      strong Passenger Name:
+      | #{ticket.passenger_name}
+    p
+      strong Seat Number:
+      | #{ticket.seat_number}
+    p
+      strong Price:
+      | #{ticket.ticket_price}
+  else
+    p No ticket found.

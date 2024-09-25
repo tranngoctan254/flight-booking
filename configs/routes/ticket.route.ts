@@ -21,6 +21,13 @@ export class TicketRoute {
       .delete(this.ticketController.destroy)
       .patch(this.ticketController.edit);
 
+    this.path.route("/search").get(this.ticketController.search);
+
+    this.path
+      .route("/book")
+      .get(this.ticketController.getBookingDetails)
+      .post(this.ticketController.book);
+
     return this.path;
   }
 }

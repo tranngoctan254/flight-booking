@@ -1,24 +1,23 @@
 extends ../layout
 
 block content
-  section.bg-light
-    .container
-      a.btn.btn-primary(href="/users/new") Create user
-
-    .container.mt-5
-        h1.text-center.mb-4 User List
-        table.table.table-bordered.table-primary
-          thead.thead-dark
-            tr
-              th Name
-              th Avatar
-              th Email
-              th Role
-          tbody
-            each user in users
-              tr
-                td= user.name
-                td
-                  img(src=user.avatarUrl alt='Avatar' width='50' height='50')
-                td= user.email
-                td= user.role
+  h1 Aircrafts
+  a(href='/aircrafts/new') Add New Aircraft
+  table
+    thead
+      tr
+        th ID
+        th Aircraft Number
+        th Aircraft Name
+        th Actions
+    tbody
+      each aircraft in aircrafts
+        tr
+          td= aircraft.aircraft_id
+          td= aircraft.aircraft_number
+          td= aircraft.aircraft_name
+          td
+            a(href=`/aircrafts/${aircraft.aircraft_id}`) View
+            a(href=`/aircrafts/${aircraft.aircraft_id}/edit`) Edit
+            form(action=`/aircrafts/${aircraft.aircraft_id}?_method=DELETE`, method='POST')
+              button(type='submit') Delete
