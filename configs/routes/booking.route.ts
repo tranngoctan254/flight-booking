@@ -1,27 +1,42 @@
-import { BookingController } from "@controllers";
 import { Router } from "express";
-import { Route } from ".";
-import { RestActions } from "../enum";
+import { BookingController } from "../../app/controllers";
+import { authenticate } from "../../app/middlewares/auth.middleware";
+import { authorize } from "../../app/middlewares/role.middleware";
 
 export class BookingRoute {
   private static path = Router();
   private static bookingController = new BookingController();
 
   public static draw() {
-    this.path.route("/").get(this.bookingController.index);
+    this.path.post("/", authenticate, this.bookingController.createBooking);
 
-    Route.resource(this.path, this.bookingController, {
-      only: [RestActions.New, RestActions.Create],
-    });
+    this.path.get(
+      "/",
+      authenticate,
+      authorize(["Admin", "Manager", "Sale"]),
+      this.bookingController.getAllBookings
+    );
 
-    this.path
-      .route("/:id")
-      .get(this.bookingController.show)
-      .put(this.bookingController.update)
-      .delete(this.bookingController.destroy)
-      .patch(this.bookingController.edit);
+    this.path.get(
+      "/:id",
+      authenticate,
+      authorize(["Admin", "Manager", "Sale"]),
+      this.bookingController.getBookingById
+    );
 
-    this.path.route("/report").get(this.bookingController.report);
+    this.path.put(
+      "/:id/status",
+      authenticate,
+      authorize(["Admin", "Manager"]),
+      this.bookingController.updateBookingStatus
+    );
+
+    this.path.delete(
+      "/:id",
+      authenticate,
+      authorize(["Admin"]),
+      this.bookingController.deleteBooking
+    );
 
     return this.path;
   }

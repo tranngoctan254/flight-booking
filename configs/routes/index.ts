@@ -1,12 +1,9 @@
 import { HomeController } from "@controllers";
 import { Router } from "express";
 import { RestActions } from "../enum";
-import { AircraftRoute } from "./aircraft.route";
-import { AuthRoute } from "./auth.route";
-import { FlightRoute } from "./flight.route";
-import { PromotionRoute } from "./promotion.route";
-import { RouteRoute } from "./route.route";
-import { TicketRoute } from "./ticket.route";
+import { BookingRoute } from "./booking.route";
+import { RoomRoute } from "./room.route";
+import { ServiceRoute } from "./service.route";
 import { UserRoute } from "./user.route";
 
 export class Route {
@@ -14,14 +11,10 @@ export class Route {
   private static homeController = new HomeController();
 
   public static draw() {
-    this.path.use("/auth", AuthRoute.draw());
     this.path.use("/users", UserRoute.draw());
-    this.path.use("/aircrafts", AircraftRoute.draw());
-    this.path.use("/flights", FlightRoute.draw());
-    this.path.use("/bookings", UserRoute.draw());
-    this.path.use("/tickets", TicketRoute.draw());
-    this.path.use("/promotions", PromotionRoute.draw());
-    this.path.use("/routes", RouteRoute.draw());
+    this.path.use("/rooms", RoomRoute.draw());
+    this.path.use("/services", ServiceRoute.draw());
+    this.path.use("/bookings", BookingRoute.draw());
 
     Route.resource(this.path, this.homeController, {
       only: [RestActions.Index],

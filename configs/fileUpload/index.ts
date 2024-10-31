@@ -28,11 +28,11 @@ export const upload = multer({ dest: "uploads" });
 export const convertFileToBase64 = (
   file: Express.Multer.File,
   isDelete: boolean = true
-) => {
+): string => {
   const fileReaded = readFileSync(file.path);
   const encodeFile = fileReaded.toString("base64");
 
   if (isDelete) unlinkSync(file.path);
 
-  return Buffer.from(encodeFile, "base64");
+  return encodeFile;
 };

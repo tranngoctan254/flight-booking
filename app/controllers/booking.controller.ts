@@ -1,117 +1,116 @@
-import models from "@models/prisma";
 import { Request, Response } from "express";
-import { ApplicationController } from ".";
+import BookingService from "../services/booking.service";
 
-export class BookingController extends ApplicationController {
-  public async index(req: Request, res: Response) {
-    const bookings = await models.booking.findMany({
-      include: { User: true, Flight: true, Tickets: true },
-    });
-    res.render("booking.view/index", { bookings });
-  }
+export class BookingController {
+  // Tạo đặt phòng mới
+  async createBooking(req: Request, res: Response) {
+    try {
+      const { userId, startDate, endDate, rooms, services, promotionId } =
+        req.body;
 
-  public async show(req: Request, res: Response) {
-    const { id } = req.params;
-    const booking = await models.booking.findUnique({
-      where: { booking_id: Number(id) },
-      include: { User: true, Flight: true, Tickets: true },
-    });
+      // Kiểm tra dữ liệu đầu vào
+      if (
+        typeof userId !== "number" ||
+        !startDate ||
+        !endDate ||
+        !Array.isArray(rooms) ||
+        !Array.isArray(services)
+      ) {
+        return res.status(400).json({
+          message:
+            "Invalid input. All fields are required and must be correctly formatted.",
+        });
+      }
 
-    if (!booking) {
-      req.flash("errors", { msg: `Booking ${id} is not found.` });
-      return res.redirect("/bookings");
+      const booking = await BookingService.createBooking({
+        userId,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        rooms,
+        services,
+        promotionId,
+      });
+
+      res
+        .status(201)
+        .json({ message: "Booking created successfully", booking });
+    } catch (error: any) {
+      res.status(500).json({ message: "Server error", error: error.message });
     }
-
-    res.render("booking.view/show", { booking });
   }
 
-  public async new(req: Request, res: Response) {
-    const flights = await models.flight.findMany();
-    const users = await models.user.findMany();
-    res.render("booking.view/new", { flights, users });
-  }
-
-  public async create(req: Request, res: Response) {
-    const { user_id, flight_id, total_price, booking_code } = req.body;
-
-    await models.booking.create({
-      data: {
-        user_id: Number(user_id),
-        flight_id: Number(flight_id),
-        total_price: Number(total_price),
-        booking_code,
-        payment_status: "pending",
-      },
-    });
-
-    req.flash("success", { msg: `Created booking with code ${booking_code}` });
-    res.redirect("/bookings");
-  }
-
-  public async edit(req: Request, res: Response) {
-    const { id } = req.params;
-    const booking = await models.booking.findUnique({
-      where: { booking_id: Number(id) },
-      include: { User: true, Flight: true },
-    });
-
-    if (!booking) {
-      req.flash("errors", { msg: `Booking ${id} is not found.` });
-      return res.redirect("/bookings");
+  // Lấy danh sách tất cả các đặt phòng
+  async getAllBookings(req: Request, res: Response) {
+    try {
+      const bookings = await BookingService.getAllBookings();
+      res.status(200).json({ bookings });
+    } catch (error: any) {
+      res.status(500).json({ message: "Server error", error: error.message });
     }
-
-    const flights = await models.flight.findMany();
-    const users = await models.user.findMany();
-    res.render("booking.view/edit", { booking, flights, users });
   }
 
-  public async update(req: Request, res: Response) {
-    const { id } = req.params;
-    const { user_id, flight_id, total_price, booking_code } = req.body;
+  // Lấy đặt phòng theo ID
+  async getBookingById(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
 
-    await models.booking.update({
-      where: { booking_id: Number(id) },
-      data: {
-        user_id: Number(user_id),
-        flight_id: Number(flight_id),
-        total_price: Number(total_price),
-        booking_code,
-      },
-    });
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid booking ID" });
+      }
 
-    req.flash("success", { msg: `Updated booking with code ${booking_code}` });
-    res.redirect("/bookings");
-  }
+      const booking = await BookingService.getBookingById(id);
 
-  public async destroy(req: Request, res: Response) {
-    const { id } = req.params;
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
 
-    await models.booking.delete({ where: { booking_id: Number(id) } });
-    req.flash("success", { msg: `Deleted booking ${id}` });
-    res.redirect("/bookings");
-  }
-
-  public async check_booking(req: Request, res: Response) {
-    const { booking_id } = req.params; // Lấy booking_id từ tham số
-
-    const booking = await models.booking.findUnique({
-      where: { booking_id: Number(booking_id) },
-      include: { User: true, Flight: true, Tickets: true },
-    });
-
-    if (!booking) {
-      req.flash("errors", { msg: `Booking ${booking_id} not found.` });
-      return res.redirect("/bookings");
+      res.status(200).json({ booking });
+    } catch (error: any) {
+      res.status(500).json({ message: "Server error", error: error.message });
     }
-
-    res.render("booking.view/check", { booking });
   }
 
-  public async report(req: Request, res: Response) {
-    const bookings = await models.booking.findMany({
-      include: { User: true, Flight: true, Tickets: true },
-    });
+  // Cập nhật trạng thái đặt phòng
+  async updateBookingStatus(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
 
-    res.render("booking.view/report", { bookings });
+      if (!status) {
+        return res.status(400).json({ message: "Status is required" });
+      }
+
+      const updatedBooking = await BookingService.updateBookingStatus(
+        id,
+        status
+      );
+
+      res.status(200).json({
+        message: "Booking status updated successfully",
+        booking: updatedBooking,
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  }
+
+  // Xóa đặt phòng
+  async deleteBooking(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid booking ID" });
+      }
+
+      const deletedBooking = await BookingService.deleteBooking(id);
+
+      res.status(200).json({
+        message: "Booking deleted successfully",
+        booking: deletedBooking,
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
   }
 }

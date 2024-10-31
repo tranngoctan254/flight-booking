@@ -1,25 +1,13 @@
-import { PaymentController } from "@controllers";
 import { Router } from "express";
-import { Route } from ".";
-import { RestActions } from "../enum";
+import { PaymentController } from "../../app/controllers/payment.controller";
+import { authenticate } from "../../app/middlewares/auth.middleware";
 
 export class PaymentRoute {
   private static path = Router();
   private static paymentController = new PaymentController();
 
   public static draw() {
-    this.path.route("/").get(this.paymentController.index);
-
-    Route.resource(this.path, this.paymentController, {
-      only: [RestActions.New, RestActions.Create],
-    });
-
-    this.path
-      .route("/:id")
-      .get(this.paymentController.show)
-      .put(this.paymentController.update)
-      .delete(this.paymentController.destroy)
-      .patch(this.paymentController.edit);
+    this.path.post("/", authenticate, this.paymentController.processPayment);
 
     return this.path;
   }

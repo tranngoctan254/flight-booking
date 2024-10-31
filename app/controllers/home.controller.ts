@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import { ApplicationController } from ".";
 
-export class HomeController extends ApplicationController {
+export class HomeController {
   public async index(req: Request, res: Response) {
     try {
       res.render("index", {

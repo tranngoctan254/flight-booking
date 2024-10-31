@@ -7,118 +7,146 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Define the Users table
 model User {
-  user_id   Int       @id @default(autoincrement())
-  avatarUrl String?   @db.Text
-  username  String    @db.VarChar(255)
-  email     String    @db.VarChar(255)
-  password  String    @db.Text
-  role      Role      @default(user)
-  Bookings  Booking[]
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  role      Role      @relation(fields: [roleId], references: [id])
+  roleId    Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[]
 }
 
-// Enum for user roles
-enum Role {
-  seller
-  user
-  admin
+model Role {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-// Define the Aircrafts table
-model Aircraft {
-  aircraft_id          Int      @id @default(autoincrement())
-  aircraft_number      String   @db.VarChar(255)
-  aircraft_name        String   @db.VarChar(255)
-  num_commercial_seats Int
-  num_vip_seats        Int
-  Flights              Flight[]
+model Room {
+  id          Int           @id @default(autoincrement())
+  roomID      String        @unique
+  description String
+  type        RoomType
+  size        RoomSize
+  price       Float
+  pictures    RoomPicture[]
+  isAvailable Boolean       @default(true)
+  bookings    BookingRoom[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
-// Define the Routes table
-model Route {
-  route_id     Int      @id @default(autoincrement())
-  from_airport String   @db.VarChar(255)
-  to_airport   String   @db.VarChar(255)
-  distance     Float
-  duration     String
-  price        Float
-  Flights      Flight[]
+model RoomPicture {
+  id     Int    @id @default(autoincrement())
+  url    String
+  room   Room   @relation(fields: [roomId], references: [id])
+  roomId Int
 }
 
-// Define the Flights table
-model Flight {
-  flight_id    Int        @id @default(autoincrement())
-  route_id     Int
-  aircraft_id  Int
-  flight_date  DateTime   @db.Date
-  flight_time  DateTime   @db.Time
-  ticket_type  TicketType
-  promotion_id Int?
-  Route        Route      @relation(fields: [route_id], references: [route_id])
-  Aircraft     Aircraft   @relation(fields: [aircraft_id], references: [aircraft_id])
-  Promotion    Promotion? @relation(fields: [promotion_id], references: [promotion_id])
-  Bookings     Booking[]
+model Service {
+  id          Int              @id @default(autoincrement())
+  serviceID   String           @unique
+  name        String
+  description String
+  unit        String
+  price       Float
+  bookings    BookingService[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
-// Enum for ticket types
-enum TicketType {
-  adult
-  child
-}
-
-// Define the Tickets table
-model Ticket {
-  ticket_id      Int     @id @default(autoincrement())
-  booking_id     Int
-  passenger_name String  @db.VarChar(255)
-  seat_number    String  @db.VarChar(255)
-  ticket_price   Float
-  Booking        Booking @relation(fields: [booking_id], references: [booking_id])
-}
-
-// Define the Bookings table
 model Booking {
-  booking_id     Int           @id @default(autoincrement())
-  user_id        Int
-  flight_id      Int
-  booking_date   DateTime      @default(now())
-  total_price    Float
-  payment_status PaymentStatus
-  booking_code   String        @db.VarChar(255)
-  User           User          @relation(fields: [user_id], references: [user_id])
-  Flight         Flight        @relation(fields: [flight_id], references: [flight_id])
-  Payments       Payment[]
-  Tickets        Ticket[]
+  id              Int              @id @default(autoincrement())
+  bookingNumber   String           @unique
+  user            User             @relation(fields: [userId], references: [id])
+  userId          Int
+  startDate       DateTime
+  endDate         DateTime
+  totalAmount     Float
+  status          BookingStatus    @default(PENDING)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  bookingRooms    BookingRoom[]
+  bookingServices BookingService[]
+  promotion       Promotion?       @relation(fields: [promotionId], references: [id])
+  promotionId     Int?
+  payments        Payment[] // Thêm quan hệ với Payment
 }
 
-// Enum for payment status
-enum PaymentStatus {
-  pending
-  paid
+model BookingRoom {
+  id        Int     @id @default(autoincrement())
+  booking   Booking @relation(fields: [bookingId], references: [id])
+  bookingId Int
+  room      Room    @relation(fields: [roomId], references: [id])
+  roomId    Int
 }
 
-// Define the Promotions table
-model Promotion {
-  promotion_id    Int      @id @default(autoincrement())
-  promotion_name  String   @db.VarChar(255)
-  description     String?  @db.Text
-  promotion_value Float
-  Flights         Flight[]
+model BookingService {
+  id         Int     @id @default(autoincrement())
+  booking    Booking @relation(fields: [bookingId], references: [id])
+  bookingId  Int
+  service    Service @relation(fields: [serviceId], references: [id])
+  serviceId  Int
+  quantity   Int     @default(1)
+  totalPrice Float
 }
 
-// Define the Payments table
 model Payment {
-  payment_id     Int           @id @default(autoincrement())
-  booking_id     Int
-  payment_method PaymentMethod
-  amount         Float
-  payment_date   DateTime      @default(now())
-  Booking        Booking       @relation(fields: [booking_id], references: [booking_id])
+  id              Int           @id @default(autoincrement())
+  paymentID       String        @unique
+  booking         Booking       @relation(fields: [bookingId], references: [id])
+  bookingId       Int
+  amount          Float
+  method          PaymentMethod
+  status          PaymentStatus
+  transactionDate DateTime      @default(now())
 }
 
-// Enum for payment methods
+model Promotion {
+  id          Int       @id @default(autoincrement())
+  promoID     String    @unique
+  name        String
+  description String
+  value       Float
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  bookings    Booking[]
+}
+
+enum RoomType {
+  VIP
+  DELUX
+  LIVING_SUITE
+}
+
+enum RoomSize {
+  SINGLE
+  DOUBLE
+  TRIPLE
+  FAMILY
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  CHECKED_IN
+  CHECKED_OUT
+}
+
 enum PaymentMethod {
-  credit_card
-  atm_card
+  CREDIT_CARD
+  PAYPAL
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
 }
