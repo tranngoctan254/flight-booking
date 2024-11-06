@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import PaymentService from "../services/payment.service";
 
 export class PaymentController {
-  // Xử lý thanh toán
   async processPayment(req: Request, res: Response) {
     try {
       const { paymentID, bookingId, method } = req.body;
@@ -22,7 +21,6 @@ export class PaymentController {
         .status(201)
         .json({ message: "Payment processed successfully", payment });
     } catch (error: any) {
-      // Xử lý lỗi và trả về phản hồi thích hợp
       if (error.message === "Booking not found") {
         return res.status(404).json({ message: "Booking not found" });
       }

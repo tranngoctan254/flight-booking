@@ -91,10 +91,10 @@ class RoomService {
     size?: RoomSize;
     minPrice?: number;
     maxPrice?: number;
-    available?: boolean; // Thêm tham số để kiểm tra tính khả dụng
+    available?: boolean;
   }): Promise<Room[]> {
     const whereClause: Prisma.RoomWhereInput = {
-      isAvailable: params.available !== undefined ? params.available : true, // Mặc định là true nếu không có tham số
+      isAvailable: params.available !== undefined ? params.available : true,
     };
 
     if (params.description) {
