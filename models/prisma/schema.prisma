@@ -105,6 +105,8 @@ model Payment {
   method          PaymentMethod
   status          PaymentStatus
   transactionDate DateTime      @default(now())
+  transactionID   String?
+  approveUrl      String?
 }
 
 model Promotion {

@@ -1,16 +1,26 @@
 import { Booking, BookingStatus } from "@prisma/client";
 import prisma from "../../models/prisma";
+import roomService from "./room.service";
 
 class BookingService {
-  // Tạo đặt phòng mới
   async createBooking(data: {
     userId: number;
     startDate: Date;
     endDate: Date;
     rooms: number[];
     services: { serviceId: number; quantity: number }[];
-    promotionId?: number; // mã giảm giá nếu có
+    promotionId?: number;
   }): Promise<Booking> {
+    const roomsAvailable = await roomService.checkRoomAvailability(
+      data.rooms,
+      data.startDate,
+      data.endDate
+    );
+
+    if (!roomsAvailable) {
+      throw new Error("Some rooms are not available for the selected dates.");
+    }
+
     const totalRoomPrice = await this.calculateRoomPrice(
       data.rooms,
       data.startDate,
@@ -44,18 +54,15 @@ class BookingService {
       },
     };
 
-    // Tùy thuộc vào việc có mã giảm giá hay không
     if (data.promotionId) {
       bookingData.promotion = { connect: { id: data.promotionId } };
     }
 
-    // Tạo đặt phòng
     const booking = await prisma.booking.create({
       data: bookingData,
       include: { bookingRooms: true, bookingServices: true },
     });
 
-    // Cập nhật trạng thái isAvailable cho các phòng
     await prisma.room.updateMany({
       where: { id: { in: data.rooms } },
       data: { isAvailable: false },
@@ -64,7 +71,6 @@ class BookingService {
     return booking;
   }
 
-  // Lấy danh sách tất cả các đặt phòng
   async getAllBookings(): Promise<Booking[]> {
     return await prisma.booking.findMany({
       include: {
@@ -75,7 +81,6 @@ class BookingService {
     });
   }
 
-  // Lấy đặt phòng theo ID
   async getBookingById(id: number): Promise<Booking | null> {
     return await prisma.booking.findUnique({
       where: { id },
@@ -87,7 +92,6 @@ class BookingService {
     });
   }
 
-  // Cập nhật trạng thái đặt phòng
   async updateBookingStatus(
     id: number,
     status: BookingStatus
@@ -103,9 +107,7 @@ class BookingService {
     });
   }
 
-  // Xóa đặt phòng
   async deleteBooking(id: number): Promise<Booking> {
-    // Kiểm tra đặt phòng có tồn tại không
     const booking = await prisma.booking.findUnique({
       where: { id },
       include: {
@@ -118,17 +120,14 @@ class BookingService {
       throw new Error("Booking not found");
     }
 
-    // Xóa các dịch vụ liên quan
     await prisma.bookingService.deleteMany({
       where: { bookingId: id },
     });
 
-    // Xóa các phòng liên quan
     await prisma.bookingRoom.deleteMany({
       where: { bookingId: id },
     });
 
-    // Cuối cùng xóa đặt phòng
     return await prisma.booking.delete({
       where: { id },
     });

@@ -7,8 +7,8 @@ export const models = {
   role: prisma.role,
   room: prisma.room,
   service: prisma.service,
-  booking: prisma.service,
-  payment: prisma.service,
+  booking: prisma.booking,
+  payment: prisma.payment,
   bookingRooms: prisma.bookingRoom,
 };
 

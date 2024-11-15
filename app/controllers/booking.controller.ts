@@ -2,13 +2,11 @@ import { Request, Response } from "express";
 import BookingService from "../services/booking.service";
 
 export class BookingController {
-  // Tạo đặt phòng mới
   async createBooking(req: Request, res: Response) {
     try {
       const { userId, startDate, endDate, rooms, services, promotionId } =
         req.body;
 
-      // Kiểm tra dữ liệu đầu vào
       if (
         typeof userId !== "number" ||
         !startDate ||
@@ -22,6 +20,7 @@ export class BookingController {
         });
       }
 
+      // Tạo booking
       const booking = await BookingService.createBooking({
         userId,
         startDate: new Date(startDate),
@@ -35,11 +34,15 @@ export class BookingController {
         .status(201)
         .json({ message: "Booking created successfully", booking });
     } catch (error: any) {
+      if (
+        error.message === "Some rooms are not available for the selected dates."
+      ) {
+        return res.status(400).json({ message: error.message });
+      }
       res.status(500).json({ message: "Server error", error: error.message });
     }
   }
 
-  // Lấy danh sách tất cả các đặt phòng
   async getAllBookings(req: Request, res: Response) {
     try {
       const bookings = await BookingService.getAllBookings();
@@ -49,7 +52,6 @@ export class BookingController {
     }
   }
 
-  // Lấy đặt phòng theo ID
   async getBookingById(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);
@@ -70,7 +72,6 @@ export class BookingController {
     }
   }
 
-  // Cập nhật trạng thái đặt phòng
   async updateBookingStatus(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);
@@ -94,7 +95,6 @@ export class BookingController {
     }
   }
 
-  // Xóa đặt phòng
   async deleteBooking(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);

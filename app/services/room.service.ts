@@ -123,6 +123,33 @@ class RoomService {
       include: { pictures: true },
     });
   }
+
+  async checkRoomAvailability(
+    roomIds: number[],
+    startDate: Date,
+    endDate: Date
+  ): Promise<boolean> {
+    // Lấy các booking có phòng trùng với phòng yêu cầu trong khoảng thời gian
+    const bookings = await models.bookingRooms.findMany({
+      where: {
+        roomId: { in: roomIds },
+        booking: {
+          OR: [
+            {
+              startDate: { lt: endDate },
+              endDate: { gt: startDate },
+            },
+            {
+              startDate: { lte: startDate },
+              endDate: { gte: endDate },
+            },
+          ],
+        },
+      },
+    });
+
+    return bookings.length === 0;
+  }
 }
 
 export default new RoomService();
