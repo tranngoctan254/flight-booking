@@ -29,6 +29,20 @@ export class PaymentRoute {
       this.paymentController.paymentCancel
     );
 
+    this.path.post(
+      "/refund",
+      authenticate,
+      authorize(["User", "Admin", "Manager"]),
+      this.paymentController.refundPayment
+    );
+
+    this.path.post(
+      "/refund",
+      authenticate,
+      authorize(["User", "Admin", "Manager"]),
+      this.paymentController.refundPayment
+    );
+
     return this.path;
   }
 }

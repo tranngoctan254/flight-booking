@@ -107,12 +107,50 @@ class PaymentService {
     try {
       const payment = await prisma.payment.update({
         where: { paymentID: paymentId },
-        data: { status: PaymentStatus.FAILED },
+        data: { status: PaymentStatus.CANCELLED },
       });
 
       return payment;
     } catch (error: any) {
       throw new Error(`Error canceling payment: ${error.message}`);
+    }
+  }
+
+  // Hoàn tiền cho thanh toán
+  async refundPayment(paymentId: string): Promise<Payment> {
+    try {
+      // Lấy thông tin thanh toán từ PayPal
+      const payment = await prisma.payment.findUnique({
+        where: { paymentID: paymentId },
+      });
+
+      if (!payment || !payment.transactionID) {
+        throw new Error("Payment or transaction not found.");
+      }
+
+      // Tạo request hoàn tiền
+      const captureId = payment.transactionID; // captureId đã được lưu trong database khi thanh toán thành công
+      const request = new paypal.payments.CapturesRefundRequest(captureId);
+
+      // Gửi yêu cầu hoàn tiền đến PayPal
+      const refundResponse = await client().execute(request);
+
+      // Kiểm tra xem hoàn tiền có thành công không
+      if (refundResponse.result.status === "COMPLETED") {
+        // Cập nhật trạng thái thanh toán trong database thành refunded
+        const refundedPayment = await prisma.payment.update({
+          where: { paymentID: paymentId },
+          data: {
+            status: PaymentStatus.REFUNDED, // Trạng thái đã hoàn tiền
+          },
+        });
+
+        return refundedPayment;
+      } else {
+        throw new Error("Refund failed: " + refundResponse.result.status);
+      }
+    } catch (error: any) {
+      throw new Error(`Error refunding payment: ${error.message}`);
     }
   }
 }

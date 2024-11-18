@@ -92,11 +92,35 @@ export class PaymentController {
         return res.status(400).json({ message: "Payment ID is required" });
       }
 
-      // Hủy thanh toán (cập nhật trạng thái Payment là FAILED)
+      // Hủy thanh toán (cập nhật trạng thái Payment là CANCELLED)
       const payment = await PaymentService.cancelPayment(paymentId as string);
 
       // Trả về thông báo hủy thành công
       res.status(200).json({ message: "Payment canceled", payment });
+    } catch (error: any) {
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  }
+
+  // Hoàn tiền (Refund) cho thanh toán
+  async refundPayment(req: Request, res: Response) {
+    try {
+      // Lấy paymentId từ query parameters
+      const { paymentId } = req.query;
+
+      if (!paymentId) {
+        return res.status(400).json({ message: "Payment ID is required" });
+      }
+
+      // Gọi PaymentService để hoàn tiền
+      const refundedPayment = await PaymentService.refundPayment(
+        paymentId as string
+      );
+
+      // Trả về thông báo hoàn tiền thành công
+      res
+        .status(200)
+        .json({ message: "Payment refunded successfully", refundedPayment });
     } catch (error: any) {
       res.status(500).json({ message: "Server error", error: error.message });
     }
