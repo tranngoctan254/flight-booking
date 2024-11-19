@@ -10,6 +10,7 @@ export const models = {
   booking: prisma.booking,
   payment: prisma.payment,
   bookingRooms: prisma.bookingRoom,
+  promotion: prisma.promotion,
 };
 
 export default prisma;

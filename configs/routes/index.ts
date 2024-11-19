@@ -3,6 +3,7 @@ import { Router } from "express";
 import { RestActions } from "../enum";
 import { BookingRoute } from "./booking.route";
 import { PaymentRoute } from "./payment.route";
+import { PromotionRoute } from "./promotion.route";
 import { RoomRoute } from "./room.route";
 import { ServiceRoute } from "./service.route";
 import { UserRoute } from "./user.route";
@@ -17,6 +18,7 @@ export class Route {
     this.path.use("/services", ServiceRoute.draw());
     this.path.use("/bookings", BookingRoute.draw());
     this.path.use("/payments", PaymentRoute.draw());
+    this.path.use("/promotions", PromotionRoute.draw());
 
     Route.resource(this.path, this.homeController, {
       only: [RestActions.Index],
